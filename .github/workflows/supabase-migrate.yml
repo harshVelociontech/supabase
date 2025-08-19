@@ -1,0 +1,29 @@
+name: Supabase Schema Migration
+
+on:
+  push:
+    branches: [dev, main]
+
+jobs:
+  migrate-db:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+ 
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Set Environment Variables
+        run: |
+          if [ "${GITHUB_REF##*/}" = "main" ]; then
+            echo "PROJECT_REF=aroduxhbezravueryxls" >> $GITHUB_ENV
+            echo "SUPABASE_DB_PASSWORD=${{ secrets.SUPABASE_DB_PASSWORD_MAIN }}" >> $GITHUB_ENV
+          fi
+
+      - name: Link and Push Migrations
+        run: |
+          supabase link --project-ref ${{ env.PROJECT_REF }} --password "${{ env.SUPABASE_DB_PASSWORD }}"
+          supabase db push --linked
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
